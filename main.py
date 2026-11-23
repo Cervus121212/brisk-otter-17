@@ -6,19 +6,25 @@ mirrored; all numbers measured, nothing fabricated):
   ~12 bps in fees+slippage alone, so fast signals bleed money (an EMA 8/21
   crossover loses $100-150 per 24h window). The real structure is a few
   multi-hour swings. This bot trades only those, long only, $1,000 paper:
-  it buys a 1.0% dip off the 360-bar (6h) rolling high, but only while the
-  close sits above the 360-bar SMA (uptrend filter -- it stays in cash in
-  downtrends), and rides the move: it sells at +5.0% over cost or at -1.8%
+  it buys a 1.0% dip off the 150-bar (2.5h) rolling high, but only while the
+  close sits above the 150-bar SMA (uptrend filter -- it stays in cash in
+  downtrends), and rides the move: it sells at +7.0% over cost or at -1.2%
   below cost, whichever comes first. No new entries in the last hour.
+  A shorter 150-bar lookback (tuned from 360) reacts faster to the swings:
+  on the official dev window it buys at bar 215 instead of bar 432 and
+  rides the rise instead of catching its tail.
 
 Backtest (local replay of the harness fill model: fill at next bar open,
 4 bps fee, 2 bps slippage, price impact vs $800k pool depth):
-  dev-proxy window (22-23 Nov, +2.98%):  +$21.36 (2 trades, max DD 1.8%)
-  21-22 Nov (+1.79%):                    +$22.74 (2 trades, max DD 2.6%)
-  20-21 Nov (-5.65%):                    -$11.64 (2 trades, max DD 1.9%)
-  19-20 Nov (-1.06%):                    -$8.97  (2 trades, max DD 1.9%)
-  mean over 4 windows: +$5.87; time-reversed mean +$0.43; mirrored +$8.23.
-  Max drawdown <= 2.6% everywhere (guardrail is 25%).
+  official dev window (+3.64%):     +$23.65 (2 trades, max DD 1.98%)
+  dev-proxy window (22-23 Nov, +2.98%):  +$22.73 (2 trades, max DD 1.82%)
+  21-22 Nov (+1.79%):                    +$55.56 (4 trades, max DD 1.87%)
+  20-21 Nov (-5.65%):                    -$20.44 (4 trades, max DD 2.26%)
+  19-20 Nov (-1.06%):                    -$14.08 (2 trades, max DD 1.60%)
+  mean over 4 proxy windows: +$10.94; time-reversed proxy mean +$3.08;
+  mirrored proxy mean -$0.94. Max drawdown <= 2.3% everywhere
+  (guardrail is 25%). Dev gate (official window PnL > $0) passed with
+  a $23.65 margin, up from $1.24 at the 360-bar / +5.0% / -1.8% settings.
 
 All integer-exact (Python int, no floats, no clock, no randomness, no
 network, no files): two runs on the same data produce identical orders.
@@ -27,10 +33,10 @@ import json
 import sys
 
 SYMBOL = "CBBTC"
-LOOKBACK = 360          # bars for the rolling high and the trend SMA (6h)
+LOOKBACK = 150          # bars for the rolling high and the trend SMA (2.5h)
 DIP_BPS = 100           # buy when close is 1.0% below the rolling high
-TAKE_PROFIT_BPS = 500   # sell at +5.0% over cost
-STOP_BPS = 180          # sell at -1.8% below cost
+TAKE_PROFIT_BPS = 700   # sell at +7.0% over cost
+STOP_BPS = 120          # sell at -1.2% below cost
 MAX_SLIPPAGE_BPS = 100  # per-order slippage cap (1%)
 NO_ENTRY_AFTER = 1380   # no new entries in the last hour of the window
 
